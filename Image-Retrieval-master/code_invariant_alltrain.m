@@ -4,7 +4,7 @@ clear;
 
 %% Training
 tic;
-testimgPath1 = dir('H:\æœ±æ…§æ•ç®—æ³• co-training\test for HOG image retrieval\Image-Retrieval-master\Dataset\All Train\*.jpg');
+testimgPath1 = dir('H:\Öì»ÛÃôËã·¨ co-training\test for HOG image retrieval\Image-Retrieval-master\Dataset\All Train\*.jpg');
 hstgrm = [];
 fullset_image_ftr = [];
 
@@ -12,7 +12,7 @@ for num = 1:length(testimgPath1)
     file_name = testimgPath1(num).name;
     out(num,:) = [cellstr(file_name) num2cell(num)];
     
-    full_file_name = fullfile('H:\æœ±æ…§æ•ç®—æ³• co-training\test for HOG image retrieval\Image-Retrieval-master\Dataset\All Train',file_name);
+    full_file_name = fullfile('H:\Öì»ÛÃôËã·¨ co-training\test for HOG image retrieval\Image-Retrieval-master\Dataset\All Train',file_name);
 %     full_file_name1 = fullfile('/home/divya/Documents/Year3Sem1/DIP/Project/test1/hog',file_name);
     
     im = imread(full_file_name);
@@ -74,7 +74,7 @@ for num = 1:length(testimgPath1)
     file_name = testimgPath1(num).name;
     out(num,:) = [cellstr(file_name) num2cell(num)];
     
-    full_file_name = fullfile('H:\æœ±æ…§æ•ç®—æ³• co-training\test for HOG image retrieval\Image-Retrieval-master\Dataset\All Train',file_name);
+    full_file_name = fullfile('H:\Öì»ÛÃôËã·¨ co-training\test for HOG image retrieval\Image-Retrieval-master\Dataset\All Train',file_name);
     
     im = imread(full_file_name);
     im1 = rgb2gray(im);
