@@ -1,0 +1,91 @@
+function [Results] = co_transduction (Diff_1, Diff_2, Co_Num,item,windows)
+[T_1,INDEX_1] = sort(Diff_1,2);
+[T_2,INDEX_2] = sort(Diff_2,2);
+
+NumOfShapes=length(Diff_1);  %% NumOfShapes : 1400
+% Retrieval=zeros(NumOfShapes,Num_retrieval);
+
+correct = 0;
+
+
+K = 0.25;  
+WINDOWS = windows;
+Neighbor=6;
+
+
+    
+    
+   %-----------Transmition Matrix------------
+   % choose the most WINDOWS similar shapes for the query shape 
+   TEMP_1 = INDEX_1(item,1:WINDOWS);  %% TEMP_1 : 1 * 300 most similar shapes for the query shape(item)
+   
+   % Build up the new matrix for the most WINDOWS similar shapes
+   Real_Diff_1 = zeros(WINDOWS,WINDOWS);
+   Real_Diff_1 = Diff_1(TEMP_1,TEMP_1);  %% Real_Diff_1 : 300 * 300  Diff values
+   
+   TT_1 = sort(Real_Diff_1,2);
+   m = mean( TT_1(:, 2:Neighbor), 2 );   %% m : 300 * 1 column vector containing the mean value of each row
+for k=1:WINDOWS% calculate sigma for affinity matrix
+    for j=1:WINDOWS
+        SIGMA=(m(k)+m(j))/2;;
+        W(k,j)=1/(sqrt(2*pi)*K*SIGMA)*exp(-Real_Diff_1(k,j)^2/2/(K*SIGMA)^2);
+    end
+end
+   [m,n] = size(W);
+   Norm = repmat(sum(W')',1,n);       %% Norm : 300 * 300 matrix 
+   P_1 = W./Norm;% normalization
+    
+   
+   TEMP_2 = INDEX_2(item,1:WINDOWS);% choose the most WINDOWS similar shapes for the query shape
+   Real_Diff_2=zeros(WINDOWS,WINDOWS);
+   Real_Diff_2=Diff_2(TEMP_2,TEMP_2);% Build up the new matrix for the most WINDOWS similar shapes
+   TT_2=sort(Real_Diff_2,2);
+   
+   m = mean( TT_2(:, 2:Neighbor), 2 );
+for k=1:WINDOWS% calculate sigma for affinity matrix
+    for j=1:WINDOWS
+        SIGMA=(m(k)+m(j))/2;
+        W(k,j)=1/(sqrt(2*pi)*K*SIGMA)*exp(-Real_Diff_2(k,j)^2/2/(K*SIGMA)^2);
+    end
+end
+   [m,n] = size(W);
+   Norm = repmat(sum(W')',1,n);
+   P_2 = W./Norm;% normalization
+   
+   %-----------Label Propogation-------------
+   %Result is the array of retrieved sample in a decreasing order
+   [Result1, f1] = Label_Propogation( TEMP_1, P_1, item,WINDOWS);   %% Result1 : 1 * 300  
+      
+   [Result2, f2] = Label_Propogation( TEMP_2, P_2, item,WINDOWS);   %% f2 : 300 * 1
+   
+   H1 = -f1.*log2(f1)
+   H2 = -f2.*log2(f2)
+   for i = 1:length( Result1 )    
+    k = find( Result2 == Result1(i) );
+    CV2(k) = H2(k).*(1-H1(i))
+   end
+   for i = 1:length( Result2 )    
+    k = find( Result1 == Result2(i) );
+    CV1(k) = H1(k).*(1-H2(i))
+   end
+    []sort(CV1,;
+   %-----------Co_Transduction-------------
+   for co_num =1:3: Co_Num
+       Co_Sample_2 = Result1(1:co_num);
+       Co_Sample_1 = Result2(1:co_num);
+       [Result1, f_1] = Label_Propogation( TEMP_1, P_1, Co_Sample_1,WINDOWS);    %Result is the array of retrieved sample in a decreasing order
+       [Result2, f_2] = Label_Propogation( TEMP_2, P_2, Co_Sample_2,WINDOWS);
+       f1 = f1 + f_1;
+       f2 = f2 + f_2;
+   end
+   
+   f = zeros( 1, NumOfShapes);
+   for i = 1:WINDOWS  %f = f1;
+       f(TEMP_1(i)) = f1(i);
+   end
+   for i = 1:WINDOWS   %f = f + f2
+       f(TEMP_2(i)) = f(TEMP_2(i)) + f2(i);
+   end
+   f = f/6;  %% as co_Transduction repeated for 6 times actually
+   f = f/2;  %% final similarity is the mean of the two original similarities
+   [ T, Results] = sort( f, 'descend');
